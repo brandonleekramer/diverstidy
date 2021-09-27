@@ -14,9 +14,9 @@ detect_sexgender_terms(data, id, input)
 \item{input}{Character vector of text data for sex/gender terms to be detected.}
 }
 \description{
-This function detects sex and gender terms in unstructured text data. The input
-will be a character vector of text data such as a biomedical abstract, a Twitter bio,
-or a chapter from a novel. The output column will provide the number of sex or
+This function detects sex and gender terms in unstructured text data. The input 
+will be a character vector of text data such as a biomedical abstract, a Twitter bio, 
+or a chapter from a novel. The output column will provide the number of sex or 
 gender terms detected in the entry.
 }
 \examples{

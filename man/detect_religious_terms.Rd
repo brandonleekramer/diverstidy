@@ -14,8 +14,8 @@ detect_religious_terms(data, id, input)
 \item{input}{Character vector of text data for religious terms to be detected.}
 }
 \description{
-This function detects religious terms in unstructured text data. The input
-will be a character vector of text data such as a biomedical abstract, a Twitter bio,
+This function detects religious terms in unstructured text data. The input 
+will be a character vector of text data such as a biomedical abstract, a Twitter bio, 
 or a chapter from a novel. The output column will provide the number of religious terms
 detected in the entry.
 }

@@ -14,8 +14,8 @@ detect_population_terms(data, id, input)
 \item{input}{Character vector of text data for group/population terms to be detected.}
 }
 \description{
-This function detects group/population terms in unstructured text data. The input
-will be a character vector of text data such as a biomedical abstract, a Twitter bio,
+This function detects group/population terms in unstructured text data. The input 
+will be a character vector of text data such as a biomedical abstract, a Twitter bio, 
 or a chapter from a novel. The output column will provide the number of group/population terms
 detected in the entry.
 }

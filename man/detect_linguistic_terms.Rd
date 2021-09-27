@@ -14,8 +14,8 @@ detect_linguistic_terms(data, id, input)
 \item{input}{Character vector of text data for linguistic terms to be detected.}
 }
 \description{
-This function detects linguistic terms in unstructured text data. The input
-will be a character vector of text data such as a biomedical abstract, a Twitter bio,
+This function detects linguistic terms in unstructured text data. The input 
+will be a character vector of text data such as a biomedical abstract, a Twitter bio, 
 or a chapter from a novel. The output column will provide the number of linguistic terms
 detected in the entry.
 }

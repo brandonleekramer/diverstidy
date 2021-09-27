@@ -14,9 +14,9 @@ detect_ancestry_terms(data, id, input)
 \item{input}{Character vector of text data for ancestry terms to be detected.}
 }
 \description{
-This function detects ancestry and heritage terms in unstructured text data. The input
-will be a character vector of text data such as a biomedical abstract, a Twitter bio,
-or a chapter from a novel. The output column will provide the number of ancestry and
+This function detects ancestry and heritage terms in unstructured text data. The input 
+will be a character vector of text data such as a biomedical abstract, a Twitter bio, 
+or a chapter from a novel. The output column will provide the number of ancestry and 
 heritage terms detected in the entry.
 }
 \examples{
