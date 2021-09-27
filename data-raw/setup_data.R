@@ -5,7 +5,7 @@ diversity_dictionary <- readr::read_csv("data-raw/diverstidy - diversity_types.c
   select(-source)
 readr::write_rds(diversity_dictionary, "R/diversity_dictionary.rds")
 usethis::use_data(diversity_dictionary, overwrite = TRUE)
-#usethis::use_data(academic_institutions, internal = TRUE, overwrite = TRUE)
+usethis::use_data(diversity_dictionary, internal = TRUE, overwrite = TRUE)
 
 # pubmed samples ----------------------------------------------------------
 
@@ -21,6 +21,7 @@ pubmed_data <- dbGetQuery(conn, "SELECT fk_pmid, year, abstract, publication
 dbDisconnect(conn)
 readr::write_rds(pubmed_data, "R/pubmed_data.rds")
 usethis::use_data(pubmed_data, overwrite = TRUE)
+usethis::use_data(pubmed_data, internal = TRUE, overwrite = TRUE)
 
 
 

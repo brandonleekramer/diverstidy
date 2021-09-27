@@ -11,7 +11,8 @@ funnel_match <- function(data, id, input, category, category_string){
   category <- enquo(category)
   `%notin%` <- Negate(`%in%`)
   
-  dictionary <- readr::read_rds(file = "R/diversity_dictionary.rds") %>% 
+  dictionary <- diversity_dictionary %>% 
+    #readr::read_rds(file = "R/diversity_dictionary.rds") %>% 
     tidyr::unnest_legacy(category = base::strsplit(category, "\\|")) %>%
     mutate(category = stringr::str_replace(category, "/", "_")) %>% 
     filter(category == category_string)
