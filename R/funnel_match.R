@@ -4,16 +4,15 @@
 
 
 
-funnel_through <- function(data, id, input, category){
+funnel_match <- function(data, id, input, category, category_string){
 
   id <- enquo(id)
   input <- enquo(input)
   category <- enquo(category)
   `%notin%` <- Negate(`%in%`)
   
-  category_string <- as.character(category)
-  
   dictionary <- readr::read_rds(file = "R/diversity_dictionary.rds") %>% 
+    tidyr::unnest_legacy(category = base::strsplit(category, "\\|")) %>%
     mutate(category = stringr::str_replace(category, "/", "_")) %>% 
     filter(category == category_string)
   
@@ -54,11 +53,11 @@ funnel_through <- function(data, id, input, category){
     dplyr::bind_rows(funnelized) %>% 
     dplyr::group_by(!!id) %>% 
     dplyr::summarise("{{category}}" := sum(!!category))
+  suppressMessages(
   funnelized <- data %>% 
     left_join(funnelized) %>% 
-    dplyr::mutate("{{category}}" := replace_na(!!category, 0))
+    dplyr::mutate("{{category}}" := replace_na(!!category, 0)))
   funnelized
-
 }
 
 
