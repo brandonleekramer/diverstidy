@@ -2,6 +2,7 @@
 rm(list=ls())
 library(tidyverse)
 library(tidytext)
+library(diverstidy)
 library(igraph)
 library(ggraph)
 library(tidygraph)

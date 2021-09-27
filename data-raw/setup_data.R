@@ -1,4 +1,4 @@
-# academic institutions data ---------------------------------------------
+# diversity dictionary --------------------------------------------------
 
 library(dplyr)
 diversity_dictionary <- readr::read_csv("data-raw/diverstidy - diversity_types.csv") %>% 
@@ -7,7 +7,7 @@ readr::write_rds(diversity_dictionary, "R/diversity_dictionary.rds")
 usethis::use_data(diversity_dictionary, overwrite = TRUE)
 usethis::use_data(diversity_dictionary, internal = TRUE, overwrite = TRUE)
 
-# pubmed samples ----------------------------------------------------------
+# pubmed sample ----------------------------------------------------------
 
 library(RPostgreSQL)
 conn <- dbConnect(drv = PostgreSQL(), 

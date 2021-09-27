@@ -8,7 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # diverstidy: A tidy package for detecting gender, race, and other forms of diversity in unstandardized text data
 
-**Authors:** [Brandon Kramer](https://www.brandonleekramer.com/)
+**Authors:** [Brandon Kramer](https://www.brandonleekramer.com/)<br/>
 **License:** [MIT](https://opensource.org/licenses/MIT)<br/>
 
 ### Installation
@@ -45,6 +45,7 @@ pubmed_data %>%
   theme_bw() + 
   ggtitle("Change in Diversity-Related Terms Over Time")
 ```
+
 ### Using the `diversity_dictionary` to examine relationships within text 
 
 ```{r, warning=FALSE, message=FALSE}
