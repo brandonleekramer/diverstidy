@@ -1,9 +1,3 @@
-
-
-
-
-
-
 funnel_match <- function(data, id, input, category, category_string){
 
   id <- enquo(id)

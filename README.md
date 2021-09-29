@@ -1,8 +1,14 @@
 
-# diverstidy: A tidy package for detecting gender, race, and other forms of diversity in unstandardized text data
+# diverstidy: A tidy package for detection and standardization of geographic, population, and diversity-related terminology in unstructured text data <img src="man/figures/diverstidy_t.png" align="right" height="200" />
 
 **Authors:** [Brandon Kramer](https://www.brandonleekramer.com/)<br/>
 **License:** [MIT](https://opensource.org/licenses/MIT)<br/>
+
+<!-- badges: start -->
+
+[![R build
+status](https://github.com/brandonleekramer/diverstidy/workflows/R-CMD-check/badge.svg)](https://github.com/brandonleekramer/diverstidy/actions)
+<!-- badges: end -->
 
 ### Installation
 
@@ -30,7 +36,11 @@ studies, but the primary uses of these functions are to examine
 historical trends in term usage and/or to detect potential biases in
 text.
 
-### Detecting racial/ethnic terms with the `detect_racialethnic_terms()` function
+### Analyzing historical trends with `detect_*_terms()`
+
+These functions help users quickly analyze changes in terms over time
+using one of the seventeen dictionaries available on diversity-related
+topics.
 
 ``` r
 library(tidyverse)
@@ -50,13 +60,15 @@ pubmed_data %>%
   pivot_longer(!year, names_to = "category", values_to = "count") %>% 
   ggplot(aes(x=year, y=count, group=category)) +
   geom_line(aes(color=category), size = 1) +
-  theme_bw() + 
-  ggtitle("Change in Diversity-Related Terms Over Time")
+  ggtitle("Change in Diversity-Related Terms Over Time") + theme_bw() 
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
 
-### Using the `diversity_dictionary` to examine relationships within text
+### Examine relationships between diversity terminology within texts
+
+Combine the `diverstidy` package with `tidytext` and `tidygraph` to make
+text networks.
 
 ``` r
 library(tidyverse)
@@ -107,8 +119,7 @@ ggraph(layout) +
   geom_node_point(aes(size = degree, color = as.factor(category)), show.legend = F) +
   geom_node_text(aes(label = new_name), vjust = 1, hjust = 1) +
   scale_color_manual(limits = as.factor(layout$category), 
-                     values = custom_colors(nrow(layout))) +  
-  theme_void()
+                     values = custom_colors(nrow(layout))) +  theme_void()
 ```
 
 <img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />

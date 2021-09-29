@@ -23,7 +23,29 @@ readr::write_rds(pubmed_data, "R/pubmed_data.rds")
 usethis::use_data(pubmed_data, overwrite = TRUE)
 usethis::use_data(pubmed_data, internal = TRUE, overwrite = TRUE)
 
+# countries data ---------------------------------------------
 
+library(tidyverse)
+world_cities <- read_csv("data-raw/worldcities_raw.csv")
+world_cities_edited <- world_cities %>% 
+  arrange(country) %>% 
+  mutate(city = tolower(city), 
+         city_ascii = tolower(city_ascii)) %>% 
+  unite("city_combined", c("city", "city_ascii"), sep = "|") %>% 
+  mutate(city_combined = str_replace(city_combined, "\\.", " ")) %>% 
+  select(city_combined, country) %>% 
+  separate_rows(city_combined, sep = "\\|") %>%
+  distinct(city_combined, country) %>% 
+  group_by(country) %>% 
+  mutate(city_combined = paste(city_combined, collapse = "|")) %>% 
+  distinct(city_combined, country)
+readr::write_csv(world_cities_edited, "data-raw/worldcities_collapsed.csv")
+
+library(dplyr)
+countries_data <- readr::read_csv("data-raw/diverstidy - countries.csv")
+readr::write_rds(countries_data, "R/countries_data.rds")
+#usethis::use_data(countries_data, overwrite = TRUE)
+usethis::use_data(countries_data, internal = TRUE, overwrite = TRUE)
 
 
 

@@ -6,10 +6,14 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# diverstidy: A tidy package for detecting gender, race, and other forms of diversity in unstandardized text data
+# diverstidy: A tidy package for detection and standardization of geographic, population, and diversity-related terminology in unstructured text data <img src="man/figures/diverstidy_t.png" align="right" height="200" />
 
 **Authors:** [Brandon Kramer](https://www.brandonleekramer.com/)<br/>
 **License:** [MIT](https://opensource.org/licenses/MIT)<br/>
+
+<!-- badges: start -->
+[![R build status](https://github.com/brandonleekramer/diverstidy/workflows/R-CMD-check/badge.svg)](https://github.com/brandonleekramer/diverstidy/actions)
+<!-- badges: end -->
 
 ### Installation
 
@@ -22,7 +26,9 @@ devtools::install_github("brandonleekramer/diverstidy")
 
 The `diverstidy` package provides several functions that help detect patterns in unstandardized text data for analyses of geographies, populations, other forms of diversity. Currently, there are 17 different functions that detect terms across the following subdomains of diversity-related research: ancestry, culture, disability, discrimination, diversity, equity, inclusion, linguistic, migration, population, race/ethnicity, religious, sex/gender, sexuality, social class, and US OMB population terms. Although somewhat simple, the intuition behind these functions is to detect the quantity of diversity-related terms show up in a given text entry. To do this, each function depends on a curated dictionary of terms that fall under these 17 domains of topics, which can be called using the `data(diversity_dictionary)` function. There are a number of case studies, but the primary uses of these functions are to examine historical trends in term usage and/or to detect potential biases in text. 
 
-### Detecting racial/ethnic terms with the `detect_racialethnic_terms()` function
+### Analyzing historical trends with `detect_*_terms()` 
+
+These functions help users quickly analyze changes in terms over time using one of the seventeen dictionaries available on diversity-related topics.
 
 ```{r, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -30,7 +36,7 @@ library(diverstidy)
 data(pubmed_data)
 ```
 
-```{r, warning=FALSE, message=FALSE, fig.align="center"}
+```{r, warning=FALSE, message=FALSE, fig.height=4, fig.align="center"}
 pubmed_data %>%
   detect_racialethnic_terms(fk_pmid, abstract) %>%
   detect_sexgender_terms(fk_pmid, abstract) %>% 
@@ -42,11 +48,12 @@ pubmed_data %>%
   pivot_longer(!year, names_to = "category", values_to = "count") %>% 
   ggplot(aes(x=year, y=count, group=category)) +
   geom_line(aes(color=category), size = 1) +
-  theme_bw() + 
-  ggtitle("Change in Diversity-Related Terms Over Time")
+  ggtitle("Change in Diversity-Related Terms Over Time") + theme_bw() 
 ```
 
-### Using the `diversity_dictionary` to examine relationships within text 
+### Examine relationships between diversity terminology within texts 
+
+Combine the `diverstidy` package with `tidytext` and `tidygraph` to make text networks.
 
 ```{r, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -97,8 +104,7 @@ ggraph(layout) +
   geom_node_point(aes(size = degree, color = as.factor(category)), show.legend = F) +
   geom_node_text(aes(label = new_name), vjust = 1, hjust = 1) +
   scale_color_manual(limits = as.factor(layout$category), 
-                     values = custom_colors(nrow(layout))) +  
-  theme_void()
+                     values = custom_colors(nrow(layout))) +  theme_void()
 ```
 
 
