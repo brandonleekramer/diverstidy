@@ -6,13 +6,13 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# diverstidy: A tidy package for detection and standardization of geographic, population, and diversity-related terminology in unstructured text data <img src="man/figures/diverstidy_t.png" align="right" height="200" />
+# diverstidy: A tidy package for detection and standardization of geographic, population, and diversity-related terminology in unstructured text data <img src="man/figures/diverstidy.png" align="right" height="250" />
 
 **Authors:** [Brandon Kramer](https://www.brandonleekramer.com/)<br/>
 **License:** [MIT](https://opensource.org/licenses/MIT)<br/>
 
 <!-- badges: start -->
-[![R build status](https://github.com/brandonleekramer/diverstidy/workflows/R-CMD-check/badge.svg)](https://github.com/brandonleekramer/diverstidy/actions)
+<!--[![R build status](https://github.com/brandonleekramer/diverstidy/workflows/R-CMD-check/badge.svg)](https://github.com/brandonleekramer/diverstidy/actions) -->
 <!-- badges: end -->
 
 ### Installation
