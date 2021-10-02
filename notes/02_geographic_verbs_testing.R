@@ -15,7 +15,8 @@ text_to_countries_df <- github_users %>%
   detect_geographies(login, location, "country", email, cities = TRUE, denonyms = TRUE)
 detected_count <- text_to_countries_df %>% 
   drop_na(country) %>% select(-company)
-to_code <- text_to_countries_df %>% filter(is.na(country)) 
+to_code <- text_to_countries_df %>% 
+  filter(is.na(country) & !grepl("(?i)(earth|milky way|/dev/null|127.0.0.1)", location)) 
 
 
 suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - abb_syms.csv"))
@@ -44,7 +45,7 @@ github_users <- dbGetQuery(conn, "SELECT login, company, location, email
 dbDisconnect(conn)
 
 
-
+2062/2344
 
 try_this <- github_users %>% 
   filter(grepl("中|国", location))
