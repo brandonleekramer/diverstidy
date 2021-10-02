@@ -1,0 +1,101 @@
+original_string,recode_column,category
+l\\.a\\.,los angeles,cities
+nyc,new york city,cities
+sf,san francisco,cities
+crdoba,cordoba,cities
+corua,coruna,cities
+", bc(?![a-z])",", british columbia",countries
+", br(?![a-z])",", brazil",countries
+", ch(?![a-z])", china,countries
+", chn(?![a-z])", china,countries
+", uk(?![a-z])",", united kingdom",countries
+",china", china,countries
+china's,china,countries
+jp,japan,countries
+p\\.r\\.china,china,countries
+u\\.s\\.,united states,countries
+u\\.s\\.a\\.,united states,countries
+ us$,united states,countries
+ usa$,united states,countries
+санкт петербург,saint petersburg russia,symbols
+上海,shanghai,symbols
+中国,china,symbols
+北京,beijing,symbols
+北京市,beijing,symbols
+区,district,symbols
+南京,nanjing,symbols
+四川,sichuan,symbols
+市,city,symbols
+广东,guangdong,symbols
+广州,guangzhou,symbols
+广州 市,guangzhou city china,symbols
+成都,chengdu,symbols
+新 区,new district china,symbols
+朝阳,chaoyang,symbols
+杭州,hangzhou,symbols
+武汉,wuhan,symbols
+江苏,jiangsu,symbols
+沙坪坝区 ,shapingba district china,symbols
+浙江,zhejiang,symbols
+浙江 杭州,hangzhou zhejiang,symbols
+海,sea,symbols
+海 淀,haidian,symbols
+海 淀,haiden china,symbols
+淀 区,dian district china,symbols
+深圳,shenzhen,symbols
+湖北,hubei,symbols
+湖南,hunan,symbols
+省,province,symbols
+长沙,changsha,symbols
+", ak(?![a-z])",", alaska",us_states
+", al(?![a-z])",", alabama",us_states
+", ar(?![a-z])",", arkansas",us_states
+", az(?![a-z])",", arizona",us_states
+", ca(?![a-z])",", california",us_states
+", co(?![a-z])",", colorado",us_states
+", ct(?![a-z])",", connecticut",us_states
+", dc(?![a-z])",", washington dc",us_states
+", de(?![a-z])",", delaware",us_states
+", fl(?![a-z])",", florida",us_states
+", ga(?![a-z])",", georgia",us_states
+", hi(?![a-z])",", hawaii",us_states
+", ia(?![a-z])",", iowa",us_states
+", id(?!aho)",", idaho",us_states
+", il(?!linois)",", illinois",us_states
+", in(?![a-z])",", indiana",us_states
+", ks(?![a-z])",", kansas",us_states
+", ky(?![a-z])",", kentucky",us_states
+", la(?![a-z])",", lousiana",us_states
+", ma(?![a-z])",", massachusetts",us_states
+", md(?![a-z])",", maryland",us_states
+", me(?![a-z])",", maine",us_states
+", mi(?!chigan)",", michigan",us_states
+", mn(?![a-z])",", minnesota",us_states
+", mo(?!ntana)",", missouri",us_states
+", ms(?![a-z])",", mississippi",us_states
+", mt(?![a-z])",", montana",us_states
+", nc(?![a-z])",", north carolina",us_states
+", nd(?![a-z])",", north dakota",us_states
+", ne(?![a-z])",", nebraska",us_states
+", nh(?![a-z])",", new hampshire",us_states
+", nj(?![a-z])",", new jersey",us_states
+", nm(?![a-z])",", new mexico",us_states
+", nv(?![a-z])",", nevada",us_states
+", ny(?![a-z])",", new york",us_states
+", oh(?![a-z])",", ohio",us_states
+", ok(?![a-z])",", oklahoma",us_states
+", or(?![a-z])",", oregon",us_states
+", pa(?![a-z])",", pennsylvania",us_states
+", pr(?![a-z])",", puerto rico",us_states
+", ri(?![a-z])",", rhode island",us_states
+", sc(?![a-z])",", south carolina",us_states
+", sd(?![a-z])",", south dakota",us_states
+", tn(?![a-z])",", tennessee",us_states
+", tx(?![a-z])",", texas",us_states
+", ut(?![a-z])",", utah",us_states
+", va(?![a-z])",", virginia",us_states
+", vt(?![a-z])",", vermont",us_states
+", wa(?![a-z])",", washington",us_states
+", wi(?![a-z])",", wisconsin",us_states
+", wv(?![a-z])",", west virginia",us_states
+", wy(?![a-z])",", wyoming",us_states

@@ -1,19 +1,24 @@
  
-
+library(dplyr)
+countries_data <- readr::read_csv("data-raw/diverstidy - countries.csv")
+readr::write_rds(countries_data, "R/countries_data.rds")
+#usethis::use_data(countries_data, overwrite = TRUE)
+usethis::use_data(countries_data, internal = TRUE, overwrite = TRUE)
 
 rm(list=ls())
+#library("devtools")
 library("tidyverse")
 library("RPostgreSQL")
 load_all()
 github_users <- tidyorgs::github_users
 text_to_countries_df <- github_users %>%
-  detect_geographies(login, location, "country", email, regions = FALSE, 
-                     cities = TRUE, denonyms = TRUE, abbreviations = FALSE)
-detected_count <- text_to_countries_df %>% drop_na(country) %>% select(-company)
+  detect_geographies(login, location, "country", email, cities = TRUE, denonyms = TRUE)
+detected_count <- text_to_countries_df %>% 
+  drop_na(country) %>% select(-company)
 to_code <- text_to_countries_df %>% filter(is.na(country)) 
 
 
-suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - correct_strings.csv"))
+suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - abb_syms.csv"))
 correct_strings <- correct_strings %>% 
   dplyr::mutate(recode_column = paste0(" ",recode_column," ")) %>%
   dplyr::select(original_string, recode_column) %>% tibble::deframe()

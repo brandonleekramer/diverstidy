@@ -31,13 +31,22 @@
 #'
 #' @export
 detect_geographies <- function(data, id, input, 
-                              output = c("country", "iso_2", "iso_3", "iso_numeric", "iso_domain", 
-                                         "continent", "region", "sub_region", "int_region", "lat_lon", 
-                                         "country_english", "country_chinese", "country_russian", 
-                                         "country_french", "country_spanish", "country_arabic"), 
-                              email, regions = TRUE, cities = TRUE, denonyms = TRUE, 
-                              abbreviations = TRUE # c("prob_match", "all", "only", "omit"), 
+                              output = c("country", "iso_2", "iso_3", 
+                                         "iso_numeric", "iso_domain", 
+                                         "continent", "flag", "region", 
+                                         "sub_region", "int_region", "lat_lon", 
+                                         "country_english", "country_chinese", 
+                                         "country_russian", "country_french", 
+                                         "country_spanish", "country_arabic"), 
+                              email, #regions = TRUE, 
+                              cities = TRUE, denonyms = TRUE 
+                              #abbreviations = TRUE # c("prob_match", "all", "only", "omit"), 
                               ){
+  # 2. convert all vars with enquos
+  id <- enquo(id)
+  input <- enquo(input)
+  output <- rlang::arg_match(output)
+  `%notin%` <- Negate(`%in%`)
   # 1. prep the dictionary procedure 
   # 1a. pull in countries dictionary 
   dictionary <- countries_data
@@ -51,11 +60,11 @@ detect_geographies <- function(data, id, input,
     return(print("Error: 'input' column requires character vector."))
   } else if (missing(email)) { 
     return(print("Error: 'email' column requires character vector."))
-  } else if (regions == TRUE) {dictionary <- dictionary %>% 
-    tidyr::unite(catch_terms, c("catch_terms", "regions"), sep="|") %>% 
-    tidyr::unite(recode_column, c("recode_column", "recode_regions"), sep="|") %>% 
-    dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
-    dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
+  #} else if (regions == TRUE) {dictionary <- dictionary %>% 
+  #  tidyr::unite(catch_terms, c("catch_terms", "regions"), sep="|") %>% 
+  #  tidyr::unite(recode_column, c("recode_column", "recode_regions"), sep="|") %>% 
+  #  dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
+  #  dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
   } else if (cities == TRUE) {dictionary <- dictionary %>% 
     tidyr::unite(catch_terms, c("catch_terms", "cities"), sep="|") %>% 
     tidyr::unite(recode_column, c("recode_column", "recode_cities"), sep="|") %>% 
@@ -66,16 +75,12 @@ detect_geographies <- function(data, id, input,
     tidyr::unite(recode_column, c("recode_column", "recode_denonyms"), sep="|") %>% 
     dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
     dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
-  } else if (abbreviations == TRUE) {dictionary <- dictionary %>% 
-    tidyr::unite(catch_terms, c("catch_terms", "abbreviations"), sep="|") %>% 
-    tidyr::unite(recode_column, c("recode_column", "recode_abbreviations"), sep="|") %>% 
-    dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
-    dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
+  #} else if (abbreviations == TRUE) {dictionary <- dictionary %>% 
+  #  tidyr::unite(catch_terms, c("catch_terms", "abbreviations"), sep="|") %>% 
+  #  tidyr::unite(recode_column, c("recode_column", "recode_abbreviations"), sep="|") %>% 
+  #  dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
+  #  dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
   } else { dictionary }
-  
-  # 1c. create an empty df with a nonexistent user 
-  ids_to_filter <- c("nonexistent-user")
-  funnelized <- data.frame()
   
   # 1d. prior to running the for loop, we need the max string length 
   max_n <- dictionary %>%
@@ -83,32 +88,27 @@ detect_geographies <- function(data, id, input,
     dplyr::mutate(word_count = lengths(base::strsplit(catch_terms, "\\W+"))) 
   max_n <- max(max_n$word_count) 
   
-  # 2. convert all vars with enquos
-  id <- enquo(id)
-  input <- enquo(input)
-  output <- rlang::arg_match(output)
-  `%notin%` <- Negate(`%in%`)
-
   # 3. drop missing, convert to lower case, convert foreign characters to english
-  suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - correct_strings.csv"))
+  suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - abb_syms.csv"))
   correct_strings <- correct_strings %>% 
-      dplyr::mutate(recode_column = paste0(" ",recode_column," ")) %>%
-      dplyr::select(original_string, recode_column) %>% tibble::deframe()
-    
-  
+    dplyr::mutate(recode_column = paste0(" ",recode_column," ")) %>%
+    dplyr::select(original_string, recode_column) %>% tibble::deframe()
+
   data <- data %>% 
     tidyr::drop_na(!!input) %>%
     dplyr::mutate(cached_input = !!input, 
                   "{{input}}" := tolower(!!input),
-                  "{{input}}" := stringr::str_replace(!!input, "/", " "),
-                  "{{input}}" := stringr::str_replace(!!input, "\\.", " "),
-                  "{{input}}" := stringr::str_replace(!!input, "·", " "),
-                  "{{input}}" := stringr::str_replace(!!input, ",", " "),
-                  "{{input}}" := stringr::str_replace(!!input, "u\\.s\\.", "united states"),
-                  "{{input}}" := stringr::str_replace(!!input, "u\\.s\\.a\\.", "united states"),
-                  "{{input}}" := stringr::str_replace_all(location, correct_strings))
+                  "{{input}}" := stringr::str_replace_all(!!input, "/", " "),
+                  "{{input}}" := stringr::str_replace_all(!!input, "\\.", " "),
+                  "{{input}}" := stringr::str_replace_all(!!input, "·", " "),
+                  "{{input}}" := stringr::str_replace_all(!!input, "\\b(:)\\b", " "),
+                  "{{input}}" := stringr::str_replace_all(!!input, "u\\.s\\.","united states"),
+                  "{{input}}" := stringr::str_replace_all(!!input, "u\\.s\\.a\\.","united states"),
+                  "{{input}}" := stringr::str_replace_all(location, correct_strings),
+                  "{{input}}" := stringr::str_replace_all(!!input, ",", " "))
   
   # 4. use a for loop to funnel match n-grams of lengths 2-12 
+  funnelized <- data.frame()
   for (n_word in max_n:2) {
     # note: 6 is the longest string in the location data (as of 08-25-2021)
     subdictionary <- dictionary %>%
@@ -117,13 +117,10 @@ detect_geographies <- function(data, id, input,
       dplyr::filter(word_count == n_word)
     subdictionary <- na.omit(subdictionary$catch_terms)
     funnelized <- data %>%
-      #dplyr::filter(!!id %notin% ids_to_filter) %>%
       tidytext::unnest_tokens(words, !!input, token="ngrams", n=n_word, to_lower = TRUE) %>%
       dplyr::filter(words %in% subdictionary) %>%
       dplyr::select(!!id, words) %>%
       dplyr::bind_rows(funnelized)
-    #newly_classified <- funnelized[,1]
-    #ids_to_filter <- c(ids_to_filter, newly_classified)
   }
   # 5. funnel match on all of the single tokens 
   subdictionary <- dictionary %>%
@@ -201,7 +198,6 @@ detect_geographies <- function(data, id, input,
       dplyr::select(-geo_code)
     all_matched_data <- dplyr::bind_rows(all_matched_data, matched_by_email)
   } 
-  
   suppressMessages(
     data <- data %>% 
       dplyr::left_join(all_matched_data) %>%
