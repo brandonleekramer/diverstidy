@@ -47,6 +47,12 @@ readr::write_rds(countries_data, "R/countries_data.rds")
 #usethis::use_data(countries_data, overwrite = TRUE)
 usethis::use_data(countries_data, internal = TRUE, overwrite = TRUE)
 
+library(dplyr)
+foreign_dictionary <- readr::read_csv("data-raw/diverstidy - foreign_dictionary.csv")
+readr::write_rds(foreign_dictionary, "R/foreign_dictionary.rds")
+#usethis::use_data(countries_data, overwrite = TRUE)
+usethis::use_data(foreign_dictionary, internal = TRUE, overwrite = TRUE)
+
 
 
 

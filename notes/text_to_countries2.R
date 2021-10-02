@@ -12,10 +12,13 @@
 #' @param id A numeric or character vector unique to each entry.
 #' @param input Character vector of messy or unstructured text that will
 #' be unnested as n-grams and matched to dictionary of organizations in specified sector.
-#' @param output Output column. Options include 'country_name','iso2','iso3','continent',
+#' @param output Output column. Options include 'country','iso2','iso3','continent', 'region', 'subregion' and 'intermediate_region'.
 #' 'region','subregion', or 'intermediate_region'.
 #' @param regions Optional argument to detect major regions (e.g., states) in each country. Defaults to TRUE. 
 #' @param cities Optional argument to detect major cities in each country. Defaults to TRUE.
+#' @param denonyms Optional argument to detect denonyms of inhabitants of each country. Defaults to TRUE.
+#' @param abbreviations Optional argument to detect abbreviations used for countries, regions, and cities. 
+#' Options include 'all', 'only', 'omit', and 'prob_match' (default).
 #'
 #' @examples
 #'
@@ -24,34 +27,66 @@
 #' data(github_users)
 #'
 #' classified_by_text <- github_users %>%
-#'   text_to_countries(login, location, country_name)
+#'   text_to_countries(login, location, country, )
 #'
 #' @export
-text_to_countries <- function(data, id, input, output, 
-                              regions = TRUE, cities = TRUE, denonyms = TRUE){
-  # to update: this beginning part can just be a helper function
-  # that i can use at the beginning of each function
-  # NOTE it might be better to create if () else if () etc on one variable,
-  # with the missing, logical, numeric, depreciated, then move onto the next variable after
-  if (missing(id)) { # |is_logical(id)
-    "Error: 'id' column requires numeric or character vector."
-  } else if (missing(input)) { # |is_logical(input)|is_numeric(input)
-    "Error: 'input' column requires character vector."
-  } 
-  # 1. convert all vars with enquos
-  id <- enquo(id)
-  input <- enquo(input)
-  output <- enquo(output)
-  regions <- enquo(regions)
-  cities <- enquo(cities)
-  denonyms <- enquo(denonyms)
-  `%notin%` <- Negate(`%in%`)
-  # 2. prep the dictionary procedure 
-  # 2a. pull in countries dictionary 
+text_to_countries <- function(data, id, input, 
+                              output = c("country", "iso_2", "iso_3", "iso_numeric", "iso_domain", 
+                                         "continent", "region", "sub_region", "int_region", "lat_lon", 
+                                         "country_english", "country_chinese", "country_russian", 
+                                         "country_french", "country_spanish", "country_arabic"), 
+                              regions = TRUE, cities = TRUE, denonyms = TRUE, 
+                              abbreviations = TRUE # c("prob_match", "all", "only", "omit"), 
+                              ){
+  # 1. prep the dictionary procedure 
+  # 1a. pull in countries dictionary 
   dictionary <- countries_data
-  # 2b. create an empty df with a nonexistent user 
+  # 1b. create all the conditions to detect countries, regions and cities 
+  dictionary <- dictionary %>% 
+    dplyr::rename(catch_terms = countries, recode_column = recode_countries)
+  
+  if (missing(id)) { 
+    return(print("Error: 'id' column requires numeric or character vector."))
+  } else if (missing(input)) { 
+    return(print("Error: 'input' column requires character vector."))
+  } else if (regions == TRUE) {dictionary <- dictionary %>% 
+    tidyr::unite(catch_terms, c("catch_terms", "regions"), sep="|") %>% 
+    tidyr::unite(recode_column, c("recode_column", "recode_regions"), sep="|") %>% 
+    dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
+    dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
+  } else if (cities == TRUE) {dictionary <- dictionary %>% 
+    tidyr::unite(catch_terms, c("catch_terms", "cities"), sep="|") %>% 
+    tidyr::unite(recode_column, c("recode_column", "recode_cities"), sep="|") %>% 
+    dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
+    dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
+  } else if (denonyms == TRUE) {dictionary <- dictionary %>% 
+    tidyr::unite(catch_terms, c("catch_terms", "denonyms"), sep="|") %>% 
+    tidyr::unite(recode_column, c("recode_column", "recode_denonyms"), sep="|") %>% 
+    dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
+    dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
+  } else if (abbreviations == TRUE) {dictionary <- dictionary %>% 
+    tidyr::unite(catch_terms, c("catch_terms", "abbreviations"), sep="|") %>% 
+    tidyr::unite(recode_column, c("recode_column", "recode_abbreviations"), sep="|") %>% 
+    dplyr::mutate(catch_terms = stringr::str_replace_all(catch_terms, "\\|NULL", "")) %>% 
+    dplyr::mutate(recode_column = stringr::str_replace_all(recode_column, "\\|NULL", ""))
+  } else { dictionary }
+  
+  # 1c. create an empty df with a nonexistent user 
   ids_to_filter <- c("nonexistent-user")
   funnelized <- data.frame()
+  
+  # 1d. prior to running the for loop, we need the max string length 
+  max_n <- dictionary %>%
+    tidyr::unnest_legacy(catch_terms = base::strsplit(catch_terms, "\\|")) %>%
+    dplyr::mutate(word_count = lengths(base::strsplit(catch_terms, "\\W+"))) 
+  max_n <- max(max_n$word_count) 
+  
+  # 2. convert all vars with enquos
+  id <- enquo(id)
+  input <- enquo(input)
+  output <- rlang::arg_match(output)
+  `%notin%` <- Negate(`%in%`)
+
   # 3. drop missing, convert to lower case, standardize some words 
   data <- data %>%
     tidyr::drop_na(!!input) %>%
@@ -59,6 +94,7 @@ text_to_countries <- function(data, id, input, output,
                   "{{input}}" := stringr::str_replace(!!input, "/", " "),
                   "{{input}}" := stringr::str_replace(!!input, "\\.", " "),
                   "{{input}}" := stringr::str_replace(!!input, "·", " "),
+                  "{{input}}" := stringr::str_replace(!!input, ",", ""),
                   "{{input}}" := stringr::str_replace(!!input, "u\\.s\\.", "united states"),
                   "{{input}}" := stringr::str_replace(!!input, "u\\.s\\.a\\.", "united states"),
                   "{{input}}" := sub('p\\.r\\.china', 'china', !!input),
@@ -94,17 +130,7 @@ text_to_countries <- function(data, id, input, output,
                   "{{input}}" := sub("市", 'city', !!input),
                   "{{input}}" := sub('санкт петербург', 'saint petersburg russia', !!input))
   
-  # 4. create all the conditions to detect countries, regions and cities 
-  dictionary <- dictionary %>% 
-    dplyr::rename(catch_terms = catch_countries)
-
-  # prior to running the for loop, we need the max string length 
-  max_n <- dictionary %>%
-    tidyr::unnest_legacy(catch_terms = base::strsplit(catch_terms, "\\|")) %>%
-    dplyr::mutate(word_count = lengths(base::strsplit(catch_terms, "\\W+"))) 
-  max_n <- max(max_n$word_count) 
-  
-  # 5. use a for loop to funnel match n-grams of lengths 2-12 
+  # 4. use a for loop to funnel match n-grams of lengths 2-12 
   for (n_word in max_n:2) {
     # note: 6 is the longest string in the location data (as of 08-25-2021)
     subdictionary <- dictionary %>%
@@ -113,38 +139,40 @@ text_to_countries <- function(data, id, input, output,
       dplyr::filter(word_count == n_word)
     subdictionary <- na.omit(subdictionary$catch_terms)
     funnelized <- data %>%
-      dplyr::filter(!!id %notin% ids_to_filter) %>%
+      #dplyr::filter(!!id %notin% ids_to_filter) %>%
       tidytext::unnest_tokens(words, !!input, token="ngrams", n=n_word, to_lower = TRUE) %>%
       dplyr::filter(words %in% subdictionary) %>%
       dplyr::select(!!id, words) %>%
       dplyr::bind_rows(funnelized)
-    newly_classified <- funnelized[,1]
-    ids_to_filter <- c(ids_to_filter, newly_classified)
+    #newly_classified <- funnelized[,1]
+    #ids_to_filter <- c(ids_to_filter, newly_classified)
   }
-  # 6. funnel match on all of the single tokens 
+  # 5. funnel match on all of the single tokens 
   subdictionary <- dictionary %>%
     tidyr::unnest_legacy(catch_terms = base::strsplit(catch_terms, "\\|")) %>%
     dplyr::mutate(word_count = lengths(base::strsplit(catch_terms, "\\W+"))) %>%
     dplyr::filter(word_count == 1)
   subdictionary <- na.omit(subdictionary$catch_terms)
   funnelized <- data %>%
-    dplyr::filter(!!id %notin% ids_to_filter) %>%
+    #dplyr::filter(!!id %notin% ids_to_filter) %>%
     tidytext::unnest_tokens(words, !!input) %>%
     dplyr::filter(words %in% subdictionary) %>%
     dplyr::select(!!id, words) %>%
     dplyr::bind_rows(funnelized) %>% 
     dplyr::select(!!id, words) 
-  dictionary <- countries_data %>%
-    dplyr::mutate(original_string = paste0("\\b(?i)(", recode_column, ")\\b")) %>%
+  dictionary <- dictionary %>%
+    dplyr::mutate(original_string = paste0("\\b(?i)(",recode_column,")\\b")) %>%
     dplyr::select(original_string, !!output) %>% tibble::deframe()
   finalized <- funnelized %>%
-    dplyr::mutate("{{output}}" := stringr::str_replace_all(words, dictionary)) %>% 
-    dplyr::select(!!id, !!output) 
+    dplyr::mutate(geo_code = stringr::str_replace_all(words, dictionary)) %>% 
+    dplyr::select(!!id, geo_code) 
   finalized <- finalized %>% 
     dplyr::distinct(across(everything())) %>%
-    dplyr::group_by(!!id, !!output) %>%
-    dplyr::mutate("{{output}}" := paste(!!output, collapse = "|")) %>% 
+    dplyr::group_by(!!id, geo_code) %>%
+    dplyr::mutate(geo_code = paste(geo_code, collapse = "|")) %>% 
     dplyr::distinct(across(everything())) %>%
-    dplyr::mutate("{{output}}" := dplyr::na_if(!!output, "NA"))
+    dplyr::mutate(geo_code = dplyr::na_if(geo_code, "NA")) %>% 
+    dplyr::rename("{{output}}" := geo_code) %>% 
+    dplyr::rename_all(~stringr::str_replace_all(.,"\"",""))
   finalized
 }
