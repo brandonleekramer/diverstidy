@@ -44,14 +44,14 @@ readr::write_csv(world_cities_edited, "data-raw/worldcities_collapsed.csv")
 library(dplyr)
 countries_data <- readr::read_csv("data-raw/diverstidy - countries.csv")
 readr::write_rds(countries_data, "R/countries_data.rds")
-#usethis::use_data(countries_data, overwrite = TRUE)
+usethis::use_data(countries_data, overwrite = TRUE)
 usethis::use_data(countries_data, internal = TRUE, overwrite = TRUE)
 
 library(dplyr)
-foreign_dictionary <- readr::read_csv("data-raw/diverstidy - foreign_dictionary.csv")
-readr::write_rds(foreign_dictionary, "R/foreign_dictionary.rds")
-#usethis::use_data(countries_data, overwrite = TRUE)
-usethis::use_data(foreign_dictionary, internal = TRUE, overwrite = TRUE)
+string_corrections <- readr::read_csv("data-raw/diverstidy - abb_syms.csv")
+readr::write_rds(string_corrections, "R/string_corrections.rds")
+usethis::use_data(string_corrections, overwrite = TRUE)
+usethis::use_data(string_corrections, internal = TRUE, overwrite = TRUE)
 
 
 

@@ -1,38 +1,23 @@
  
-library(dplyr)
-countries_data <- readr::read_csv("data-raw/diverstidy - countries.csv")
-readr::write_rds(countries_data, "R/countries_data.rds")
-#usethis::use_data(countries_data, overwrite = TRUE)
-usethis::use_data(countries_data, internal = TRUE, overwrite = TRUE)
+conn <- dbConnect(drv = PostgreSQL(),
+                  dbname = "sdad",
+                  host = "10.250.124.195",
+                  port = 5432,
+                  user = Sys.getenv("db_userid"),
+                  password = Sys.getenv("db_pwd"))
+test <- dbGetQuery(conn, "SELECT *
+                           FROM gh.ctrs_raw")
+dbDisconnect(conn)
+
+dropped <- test %>% 
+  filter(!is.na(location) | !is.na(company) | !is.na(email))
 
 rm(list=ls())
 #library("devtools")
 library("tidyverse")
 library("RPostgreSQL")
 load_all()
-github_users <- tidyorgs::github_users
-text_to_countries_df <- github_users %>%
-  detect_geographies(login, location, "country", email, cities = TRUE, denonyms = TRUE)
-detected_count <- text_to_countries_df %>% 
-  drop_na(country) %>% select(-company)
-to_code <- text_to_countries_df %>% 
-  filter(is.na(country) & !grepl("(?i)(earth|milky way|/dev/null|127.0.0.1)", location)) 
-
-
-suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - abb_syms.csv"))
-correct_strings <- correct_strings %>% 
-  dplyr::mutate(recode_column = paste0(" ",recode_column," ")) %>%
-  dplyr::select(original_string, recode_column) %>% tibble::deframe()
-chk <- to_code %>% 
-  mutate(location = tolower(location)) %>% 
-  mutate(location_new = str_replace_all(location, correct_strings))
-
-1960/2344
-
-rm(list=ls())
-library("tidyverse")
-library("RPostgreSQL")
-load_all()
+#github_users <- tidyorgs::github_users
 
 conn <- dbConnect(drv = PostgreSQL(),
                   dbname = "sdad",
@@ -41,9 +26,108 @@ conn <- dbConnect(drv = PostgreSQL(),
                   user = Sys.getenv("db_userid"),
                   password = Sys.getenv("db_pwd"))
 github_users <- dbGetQuery(conn, "SELECT login, company, location, email 
-                           FROM gh.ctrs_clean_0821 LIMIT 10000")
+                           FROM gh.ctrs_clean_0821")
 dbDisconnect(conn)
 
+start <- Sys.time()
+text_to_countries_df <- github_users %>%
+  detect_geographies(login, location, "country", email)
+diff = Sys.time() - start; diff
+detected_count <- text_to_countries_df %>% 
+  drop_na(country) %>% select(-company)
+to_code <- text_to_countries_df %>% 
+  filter(is.na(country) & 
+           !grepl("(?i)(earth|milky way|^/dev|/home|/etc|/usr|^0x|^3rd rock|^/bin127.0.0.1|^world|^@|^anywhere|^somewhere|mars|remote|internet|the internet|localhost|everywhere|global|home|cyberspace|moon|online|null|hell|the world|unknown|behind you|the universe|universe)", location)) %>% 
+  filter(grepl("[a-z]", location))
+
+top_entries_1 <- to_code %>% 
+  mutate(location = tolower(location)) %>% 
+  count(location) %>% 
+  arrange(-n)
+sum(top_entries_1$n)
+
+
+
+
+country_dictionary <- countries_data
+country_dictionary <- country_dictionary %>%
+  tidyr::drop_na(iso_domain) %>%
+  tidyr::unnest_legacy(iso_domain = base::strsplit(iso_domain, "\\|")) %>% 
+  dplyr::select(iso_domain, !!output) 
+country_vector <- na.omit(country_dictionary$iso_domain)
+country_dictionary <- country_dictionary %>%
+  dplyr::mutate(beginning = "\\b(?i)(", ending = ")\\b", 
+                iso_domain = str_replace(iso_domain, "\\.", ""),
+                iso_domain = paste0(beginning, iso_domain, ending)) %>%
+  dplyr::select(iso_domain, country) %>% tibble::deframe()
+
+chk_emails <- text_to_countries_df %>% 
+  filter(is.na(country)) %>% 
+      tidyr::drop_na(email) %>% # drop missing emails
+      dplyr::mutate(email = tolower(email)) %>% # all domains to lower
+      dplyr::mutate(domain = sub('.*@', '', email)) %>% # extract domain info after @ sign
+      dplyr::mutate(domain = sub('.*\\.', '.', domain)) %>% 
+  dplyr::mutate(domain = str_replace(domain, '\\.', '')) %>% 
+  dplyr::mutate(geo_code = stringr::str_replace_all(domain, country_dictionary))
+
+lets_see <- github_users %>% 
+  filter(!is.na(location) | !is.na(company) | !is.na(email))
+
+load_all()
+other_detection_df <- text_to_countries_df %>% 
+  filter(is.na(country)) %>% 
+  drop_na(location) %>% 
+  drop_na(email) %>% 
+  select(-country) %>% 
+  detect_geographies(login, location, "country", email)
+  
+top_entries_2 <- other_detection_df %>% 
+  filter(is.na(country)) %>% 
+  mutate(location = tolower(location)) %>% 
+  count(location) %>% 
+  arrange(-n)
+sum(top_entries_2$n)
+(1195347 + 1459) / 1260266
+(1195347 + 1459) / 3212546
+756000 / 1260266
+
+# if country exists must recode this with a warning that says "country_original"
+
+suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - abb_syms.csv"))
+correct_strings <- correct_strings %>% 
+  dplyr::mutate(recode_column = paste0(" ",recode_column," ")) %>%
+  dplyr::select(original_string, recode_column) %>% tibble::deframe()
+chk <- to_code %>% 
+  data.table::as.data.table() %>% 
+  maditr::dt_mutate(geo_code = stringr::str_replace_all(location, correct_strings)) %>% 
+  dplyr::as_data_frame()
+
+
+chk <- to_code %>% 
+  mutate(location = tolower(location)) %>% 
+  mutate(location_new = str_replace_all(location, correct_strings))
+
+valid_data <- github_users %>% 
+  drop_na(location)
+
+before_ab_corrections = 1184921/1260266 
+before_ab_time = 38.6
+after_ab_corrections = 1187575/1260266  
+before_ab_time = 40.29796
+
+rm(list=ls())
+library("tidyverse")
+library("RPostgreSQL")
+load_all()
+
+
+
+start <- Sys.time()
+test_this <- github_users %>% 
+  tidyr::drop_na(location) %>%
+  filter(grepl(",", location)) %>% 
+  mutate(location_new = str_replace_all(location, string_corrections))
+diff = Sys.time() - start; diff
 
 2062/2344
 
@@ -96,6 +180,10 @@ detect_us_states(data, id, input, output,
                  cities = T, emails = email)
 
 
+country_count <- text_to_countries_df %>% 
+  tidyr::unnest_legacy(country = strsplit(country, "\\|")) %>% 
+  count(country) %>% 
+  arrange(-n)
 
 
 

@@ -89,22 +89,23 @@ detect_geographies <- function(data, id, input,
   max_n <- max(max_n$word_count) 
   
   # 3. drop missing, convert to lower case, convert foreign characters to english
-  suppressMessages(correct_strings <- readr::read_csv("data-raw/diverstidy - abb_syms.csv"))
-  correct_strings <- correct_strings %>% 
+  suppressMessages(string_corrections <- string_corrections)
+  string_corrections <- string_corrections %>% 
     dplyr::mutate(recode_column = paste0(" ",recode_column," ")) %>%
     dplyr::select(original_string, recode_column) %>% tibble::deframe()
 
+  original_data <- data
   data <- data %>% 
     tidyr::drop_na(!!input) %>%
-    dplyr::mutate(cached_input = !!input, 
-                  "{{input}}" := tolower(!!input),
+    dplyr::mutate("{{input}}" := tolower(!!input),
                   "{{input}}" := stringr::str_replace_all(!!input, "/", " "),
                   "{{input}}" := stringr::str_replace_all(!!input, "\\.", " "),
                   "{{input}}" := stringr::str_replace_all(!!input, "·", " "),
+                  "{{input}}" := stringr::str_replace_all(!!input, "_", " "),
                   "{{input}}" := stringr::str_replace_all(!!input, "\\b(:)\\b", " "),
                   "{{input}}" := stringr::str_replace_all(!!input, "u\\.s\\.","united states"),
                   "{{input}}" := stringr::str_replace_all(!!input, "u\\.s\\.a\\.","united states"),
-                  "{{input}}" := stringr::str_replace_all(location, correct_strings),
+                  "{{input}}" := stringr::str_replace_all(location, string_corrections),
                   "{{input}}" := stringr::str_replace_all(!!input, ",", " "))
   
   # 4. use a for loop to funnel match n-grams of lengths 2-12 
@@ -199,7 +200,7 @@ detect_geographies <- function(data, id, input,
     all_matched_data <- dplyr::bind_rows(all_matched_data, matched_by_email)
   } 
   suppressMessages(
-    data <- data %>% 
+    data <- original_data %>% 
       dplyr::left_join(all_matched_data) %>%
       dplyr::rename(geo_code = !!output) %>% 
       dplyr::distinct(across(everything())) %>%
@@ -209,8 +210,7 @@ detect_geographies <- function(data, id, input,
       dplyr::mutate("{{output}}" := dplyr::na_if(geo_code, "NA")) %>% 
       dplyr::rename_all(~stringr::str_replace_all(.,"\"","")) %>% 
       dplyr::ungroup() %>% 
-      dplyr::mutate("{{ input }}" := cached_input) %>% 
-      dplyr::select(-geo_code, -cached_input) 
+      dplyr::select(-geo_code) 
   ) 
   data
 }
