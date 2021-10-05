@@ -5,8 +5,7 @@ conn <- dbConnect(drv = PostgreSQL(),
                   port = 5432,
                   user = Sys.getenv("db_userid"),
                   password = Sys.getenv("db_pwd"))
-test <- dbGetQuery(conn, "SELECT *
-                           FROM gh.ctrs_raw")
+test <- dbGetQuery(conn, "SELECT * FROM gh.ctrs_raw")
 dbDisconnect(conn)
 
 dropped <- test %>% 
@@ -17,7 +16,7 @@ rm(list=ls())
 library("tidyverse")
 library("RPostgreSQL")
 load_all()
-#github_users <- tidyorgs::github_users
+# github_users <- tidyorgs::github_users
 
 conn <- dbConnect(drv = PostgreSQL(),
                   dbname = "sdad",
@@ -29,10 +28,35 @@ github_users <- dbGetQuery(conn, "SELECT login, company, location, email
                            FROM gh.ctrs_clean_0821")
 dbDisconnect(conn)
 
+
+chk_this_out <- text_to_countries_df %>% 
+  filter(grepl("iulia|kinabalu", country))
+
+try_this <- chk_this_out %>%
+  rename_all(country = "country_new")
+
+
+
+
+library("tidyverse")
+library("RPostgreSQL")
+text_to_countries_df <- read_rds("~/git/diverstidy/data-raw/text_to_countries.rds")
+load_all()
+attempt_1 <- text_to_countries_df %>%
+  slice(1:25) %>% 
+  detect_geographies(login, location, "country", email)
+
+
+
+load_all()
 start <- Sys.time()
 text_to_countries_df <- github_users %>%
   detect_geographies(login, location, "country", email)
 diff = Sys.time() - start; diff
+
+setwd("~/git/diverstidy/data-raw/")
+saveRDS(text_to_countries_df, file = "classified.rds", compress = TRUE)
+
 detected_count <- text_to_countries_df %>% 
   drop_na(country) %>% select(-company)
 to_code <- text_to_countries_df %>% 
@@ -186,7 +210,12 @@ country_count <- text_to_countries_df %>%
   arrange(-n)
 
 
+library(progress)
 
+for (i in 1:10) {
+  pb$tick()
+  Sys.sleep(1 / 10)
+}
 
 
 

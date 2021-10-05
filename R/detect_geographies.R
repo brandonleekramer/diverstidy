@@ -42,11 +42,13 @@ detect_geographies <- function(data, id, input,
                               cities = TRUE, denonyms = TRUE 
                               #abbreviations = TRUE # c("prob_match", "all", "only", "omit"), 
                               ){
+  pb <- progress::progress_bar$new(total = 100)
+  pb$tick(0)
   # 2. convert all vars with enquos
-  id <- enquo(id)
-  input <- enquo(input)
+  id <- dplyr::enquo(id)
+  input <- dplyr::enquo(input)
   output <- rlang::arg_match(output)
-  `%notin%` <- Negate(`%in%`)
+  `%notin%` <- base::Negate(`%in%`)
   # 1. prep the dictionary procedure 
   # 1a. pull in countries dictionary 
   dictionary <- countries_data
@@ -94,6 +96,12 @@ detect_geographies <- function(data, id, input,
     dplyr::mutate(recode_column = paste0(" ",recode_column," ")) %>%
     dplyr::select(original_string, recode_column) %>% tibble::deframe()
 
+  # need to rename column if the original df has "country" as a column name 
+  if ("country" %in% colnames(data) && "continent" %in% colnames(data)) {
+    data <- plyr::rename(data, replace = c(country="country_original"), warn_missing = FALSE)
+      warning("The original data frame contained the same name as your 'output' variable. The column will be renamed.")
+  } else data 
+  
   original_data <- data
   data <- data %>% 
     tidyr::drop_na(!!input) %>%
@@ -108,6 +116,7 @@ detect_geographies <- function(data, id, input,
                   "{{input}}" := stringr::str_replace_all(location, string_corrections),
                   "{{input}}" := stringr::str_replace_all(!!input, ",", " "))
   
+  pb$tick(5)
   # 4. use a for loop to funnel match n-grams of lengths 2-12 
   funnelized <- data.frame()
   for (n_word in max_n:2) {
@@ -139,6 +148,7 @@ detect_geographies <- function(data, id, input,
   dictionary <- dictionary %>%
     dplyr::mutate(original_string = paste0("\\b(?i)(",recode_column,")\\b")) %>%
     dplyr::select(original_string, !!output) %>% tibble::deframe()
+  pb$tick(15)
   all_matched_data <- funnelized %>%
     dplyr::mutate(geo_code = stringr::str_replace_all(words, dictionary)) %>% 
     dplyr::select(!!id, geo_code) 
@@ -150,15 +160,10 @@ detect_geographies <- function(data, id, input,
     dplyr::mutate(geo_code = dplyr::na_if(geo_code, "NA")) %>% 
     dplyr::rename("{{output}}" := geo_code) %>% 
     dplyr::rename_all(~stringr::str_replace_all(.,"\"",""))
-
   if (missing(email)) { 
-    
     all_matched_data 
-    
   } else {
-    
     email <- enquo(email)
-    
     # 2. pull out all of the country domains from the dictionary 
     country_dictionary <- countries_data
     country_dictionary <- country_dictionary %>%
@@ -171,7 +176,7 @@ detect_geographies <- function(data, id, input,
                     iso_domain = str_replace(iso_domain, "\\.", ""),
                     iso_domain = paste0(beginning, iso_domain, ending)) %>%
       dplyr::select(iso_domain, !!output) %>% tibble::deframe()
-    
+    pb$tick(60)
     # 3. drop missing emails, all domains to lower, extract domain info after @ sign
     matched_by_email <- data %>%
       tidyr::drop_na(!!email) %>% # drop missing emails
@@ -199,11 +204,13 @@ detect_geographies <- function(data, id, input,
       dplyr::select(-geo_code)
     all_matched_data <- dplyr::bind_rows(all_matched_data, matched_by_email)
   } 
+  pb$tick(10)
   suppressMessages(
     data <- original_data %>% 
       dplyr::left_join(all_matched_data) %>%
       dplyr::rename(geo_code = !!output) %>% 
       dplyr::distinct(across(everything())) %>%
+      dplyr::filter(geo_code != "NA") %>% 
       dplyr::group_by(!!id, !!input, !!email) %>%
       dplyr::mutate(geo_code =  paste0(geo_code, collapse = "|")) %>% 
       dplyr::distinct(across(everything())) %>%
@@ -212,5 +219,6 @@ detect_geographies <- function(data, id, input,
       dplyr::ungroup() %>% 
       dplyr::select(-geo_code) 
   ) 
+  pb$tick(10)
   data
 }
