@@ -36,11 +36,68 @@ studies, but the primary uses of these functions are to examine
 historical trends in term usage and/or to detect potential biases in
 text.
 
+### Standardizing countries and continents with `detect_geographies()`
+
+Imagine that you just scraped a bunch of data from a social media like
+Twitter or code hosting platform like GitHub. You want to find out where
+the users’ information is coming from, but only have messy text data
+where users write they currently live. You could develop some regex to
+catch these countries, but this is incredibly time consuming to develop
+and regex can run very slow when matching over large text corpora.
+`detect_geographies()` is capable of not only detecting and
+standardizing messy text data into countries, but also includes data on
+more than 35,000 cities to maximize the accuracy of the detection
+process. Moreover, it uses a “funnel matchings” technique that makes the
+progress goes much faster (currently \~40 mins for 3 million entries).
+You can choose to recode your desired outcome to countries, continents,
+a number of regions defined by the United Nations, country names in
+seven different languages, and cute little emoji flags\! If you need the
+flexibility of `detect_geographies()` but a different country coding
+scheme, check out the
+[`countrycode`](https://github.com/vincentarelbundock/countrycode)
+package for \~40 different options.
+
+``` r
+library(tidyverse)
+library(tidyorgs)
+library(diverstidy)
+data(github_users)
+```
+
+``` r
+github_users %>%
+  detect_geographies(login, location, "country", email) %>% 
+  detect_geographies(login, country, "iso_2") %>% 
+  detect_geographies(login, country, "flag") %>% 
+  select(login, location, country, iso_2, flag)
+```
+
+    ## # A tibble: 460 × 5
+    ##    login        location                  country        iso_2 flag 
+    ##    <chr>        <chr>                     <chr>          <chr> <chr>
+    ##  1 mcollina     In the clouds above Italy Italy          IT    🇮🇹   
+    ##  2 geoffeg      St. Louis, MO             United States  US    🇺🇸   
+    ##  3 diegopacheco Porto Alegre, RS - Brazil Brazil         BR    🇧🇷   
+    ##  4 ephur        San Antonio, TX           United States  US    🇺🇸   
+    ##  5 paneq        Poland, Wrocaw            Poland         PL    🇵🇱   
+    ##  6 michaeljones Manchester, UK            United Kingdom GB    🇬🇧   
+    ##  7 wjimenez5271 Sunnyvale, CA             United States  US    🇺🇸   
+    ##  8 simongog     Karlsruhe                 Germany        DE    🇩🇪   
+    ##  9 dalpo        Vicenza, Italy            Italy          IT    🇮🇹   
+    ## 10 shouze       Marseille, France         France         FR    🇫🇷   
+    ## # … with 450 more rows
+
 ### Analyzing historical trends with `detect_*_terms()`
 
 These functions help users quickly analyze changes in terms over time
 using one of the seventeen dictionaries available on diversity-related
-topics.
+topics. In essence, the functions rely on curated dictionaries with
+dozens of terms in each category. You can simply use the functions from
+each category to detect how many terms relating to sex/gender or
+race/ethnicity show up in the text and then summarize to see how they
+change over time. These functions could also be used to examine
+diversity-related trends in social media profiles like Twitter or
+LinkedIn.
 
 ``` r
 library(tidyverse)
@@ -63,12 +120,17 @@ pubmed_data %>%
   ggtitle("Change in Diversity-Related Terms Over Time") + theme_bw() 
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
 
-### Examine relationships between diversity terminology within texts
+### Examining relationships between diversity terminology within texts
 
-Combine the `diverstidy` package with `tidytext` and `tidygraph` to make
-text networks.
+Sociologists are usually taught early on in their graduate careers that
+“sex/gender is relational.” Here, you can combine the `diverstidy`
+package with `tidytext` and `tidygraph` to make text networks that help
+reveal how sex/gender and other forms of diversity relate to other
+concepts in unstandardized text data. Here is a preliminary example that
+shows how population terms tend to cluster together in biomedical
+abstracts.
 
 ``` r
 library(tidyverse)
@@ -122,4 +184,7 @@ ggraph(layout) +
                      values = custom_colors(nrow(layout))) +  theme_void()
 ```
 
-<img src="README_files/figure-gfm/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
+<img src="README_files/figure-gfm/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+
+Stay tuned for more functions that help with the detection of diverse
+populations from all around the world\!
