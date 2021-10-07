@@ -20,9 +20,9 @@
 #'   
 #' @export
 detect_ancestry_terms <- function(data, id, input){
-  id <- enquo(id)
-  input <- enquo(input)
+  id <- dplyr::enquo(id)
+  input <- dplyr::enquo(input)
   data <- data %>% 
-    funnel_match(!!id, !!input, ancestry, "ancestry")
+    diversity::funnel_match(!!id, !!input, ancestry, "ancestry")
   data 
 }

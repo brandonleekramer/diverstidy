@@ -1,61 +1,124 @@
  
-conn <- dbConnect(drv = PostgreSQL(),
-                  dbname = "sdad",
-                  host = "10.250.124.195",
-                  port = 5432,
-                  user = Sys.getenv("db_userid"),
-                  password = Sys.getenv("db_pwd"))
-test <- dbGetQuery(conn, "SELECT * FROM gh.ctrs_raw")
-dbDisconnect(conn)
-
-dropped <- test %>% 
-  filter(!is.na(location) | !is.na(company) | !is.na(email))
 
 rm(list=ls())
 #library("devtools")
 library("tidyverse")
 library("RPostgreSQL")
-load_all()
-# github_users <- tidyorgs::github_users
+devtools::load_all()
 
+# get data 
 conn <- dbConnect(drv = PostgreSQL(),
                   dbname = "sdad",
                   host = "10.250.124.195",
                   port = 5432,
                   user = Sys.getenv("db_userid"),
                   password = Sys.getenv("db_pwd"))
-github_users <- dbGetQuery(conn, "SELECT login, company, location, email 
-                           FROM gh.ctrs_clean_0821")
+#test <- dbGetQuery(conn, "SELECT * FROM gh.ctrs_raw")
+github_users <- dbGetQuery(conn, "SELECT login, company, location, email FROM gh.ctrs_clean_0821")
 dbDisconnect(conn)
-
-
-chk_this_out <- text_to_countries_df %>% 
-  filter(grepl("iulia|kinabalu", country))
-
-try_this <- chk_this_out %>%
-  rename_all(country = "country_new")
-
-
-
-
-library("tidyverse")
-library("RPostgreSQL")
-text_to_countries_df <- read_rds("~/git/diverstidy/data-raw/text_to_countries.rds")
-load_all()
-attempt_1 <- text_to_countries_df %>%
-  slice(1:25) %>% 
-  detect_geographies(login, location, "country", email)
-
-
-
-load_all()
-start <- Sys.time()
-text_to_countries_df <- github_users %>%
-  detect_geographies(login, location, "country", email)
-diff = Sys.time() - start; diff
 
 setwd("~/git/diverstidy/data-raw/")
 saveRDS(text_to_countries_df, file = "classified.rds", compress = TRUE)
+
+github_users <- tidyorgs::github_users
+devtools::load_all()
+github_users %>%
+  detect_geographies(login, location, "country")
+
+
+chk <- github_users %>%
+  detect_geographies(login, location, "country", email) %>% 
+  detect_geographies(login, country, "iso_2") %>% 
+  detect_geographies(login, country, "flag") %>% 
+  select(login, location, country, iso_2, flag)
+
+ 
+##### TESTING 
+
+library("tidyverse")
+library("RPostgreSQL")
+text_to_countries <- 
+  read_rds("~/Documents/git/diverstidy/data-raw/working-data/text_to_countries.rds")
+devtools::load_all()
+start <- Sys.time()
+text_to_countries_new <- text_to_countries %>%
+  detect_geographies(login, location, "country", email)
+diff = Sys.time() - start; diff
+
+
+chk <- text_to_countries_new %>% 
+  filter(grepl("\\|", country))
+
+
+
+devtools::load_all()
+text_to_countries_df2 <- chk %>% 
+  slice(1:10000) %>% 
+  select(-country_original) %>% 
+  #filter(grepl("Argentina |Colombia ", country)) %>% 
+  detect_geographies(login, location, "country", email) 
+
+total_classified <- text_to_countries_new %>% 
+  drop_na(country)
+
+total_to_classify <- text_to_countries_new %>% 
+  filter((!is.na(email) & !grepl(".com$", email)) | !is.na(location)) %>% 
+  filter(!grepl("(?i)(earth|milky way|^/dev|/home|/etc|/usr|^0x|^3rd rock|^/bin127.0.0.1|^world|^@|^anywhere|^somewhere|mars|remote|internet|the internet|localhost|everywhere|global|home|cyberspace|moon|online|null|hell|the world|unknown|behind you|the universe|universe)", location))
+
+1216298 / 1501252 # all valid email & location data 
+1216298 / 1286886 # with earth etc removed 
+1216298 / 1301728 # with .com removed 
+
+
+country_count <- text_to_countries_new %>% 
+  tidyr::unnest_legacy(country = strsplit(country, "\\|")) %>% 
+  count(country) %>% 
+  arrange(-n)
+
+chk <- text_to_countries_chk %>% 
+  filter(!is.na(email) | !is.na(location)) %>% 
+  select(login, company, location, email) %>% 
+  left_join(text_to_countries_df %>% select(login, country), by = "login") %>% 
+  filter(is.na(country) & !grepl("\\.com$", email)) 
+
+
+country_dictionary <- countries_data
+country_dictionary <- country_dictionary %>%
+  tidyr::drop_na(iso_domain) %>%
+  tidyr::unnest_legacy(iso_domain = base::strsplit(iso_domain, "\\|")) %>% 
+  dplyr::select(iso_domain, country) 
+country_vector <- na.omit(country_dictionary$iso_domain)
+country_dictionary <- country_dictionary %>%
+  dplyr::mutate(beginning = "\\b(?i)(", ending = ")\\b", 
+                iso_domain = str_replace(iso_domain, "\\.", ""),
+                iso_domain = paste0(beginning, iso_domain, ending)) %>%
+  dplyr::select(iso_domain, country) %>% tibble::deframe()
+
+
+matched_by_email <- text_to_countries_new %>%
+  tidyr::drop_na(email) %>% # drop missing emails
+  dplyr::mutate(email = tolower(email)) %>% # all domains to lower
+  dplyr::mutate(domain = sub('.*@', '', email)) %>% # extract domain info after @ sign
+  dplyr::mutate(domain = sub('.*\\.', '.', domain)) %>% # extract the last .domain
+  # matches all of the root domains with several exceptions (bc of industry appropriation)
+  dplyr::filter(domain %in% country_vector 
+                & domain != ".ag" & domain != ".ai" & domain != ".am" 
+                & domain != ".as" & domain != ".cc" & domain != ".fm" 
+                & domain != ".io" & domain != ".im" & domain != ".me") %>%  
+  dplyr::mutate(domain = str_replace(domain, '\\.', '')) 
+# 6c. uses str_replace_all() to recode all domains into countries
+matched_by_email <- matched_by_email %>% 
+  dplyr::mutate(geo_code = stringr::str_replace_all(domain, country_dictionary)) %>%
+  dplyr::select(login, geo_code)
+
+
+
+
+
+
+
+
+
 
 detected_count <- text_to_countries_df %>% 
   drop_na(country) %>% select(-company)

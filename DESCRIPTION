@@ -1,29 +1,33 @@
 Package: diverstidy
 Type: Package
 Title: Standardize messy text data for geographic, population, and diversity-related research
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: c(person("Brandon", "Kramer", role = c("aut", "cre"),
              email = "brandonleekramer@gmail.com",
              comment = c(ORCID = "0000-0002-3233-5310")))
 Maintainer: Brandon Kramer <brandonleekramer@gmail.com>
 Description: The diverstidy package provides several functions that help detect patterns in 
                 unstandardized text data for analyses of geographies, populations, other forms 
-                of diversity. Currently, there are 17 different functions that detect terms across 
-                the following subdomains of diversity-related research: ancestry, culture, disability, 
-                discrimination, diversity, equity, inclusion, linguistic, migration, population, race/ethnicity, 
-                religious, sex/gender, sexuality, social class, and US OMB population terms. Although somewhat 
-                simple, the intuition behind these functions is to detect the quantity of diversity-related 
-                terms show up in a given text entry. There are a number of case studies, but the primary uses 
-                of these functions are to examine historical trends in term usage and/or to detect 
-                potential biases in text.
+                of diversity. Currently, there is one function for detecting geographies and 17 additional 
+                functions that detect terms across the following subdomains of diversity-related research: 
+                ancestry, culture, disability, discrimination, diversity, equity, inclusion, linguistic, 
+                migration, population, race/ethnicity, religious, sex/gender, sexuality, social class, 
+                and US OMB population terms. Although somewhat simple, the intuition behind these functions 
+                is to detect the quantity of diversity-related terms show up in a given text entry. 
+                There are a number of case studies, but the primary uses of these functions are to examine 
+                historical trends in term usage and/or to detect potential biases in text.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/brandonleekramer/tidyorgs
+URL: https://github.com/brandonleekramer/diverstidy
 Depends: R (>= 2.10)
 Imports: dplyr, 
     readr,
     stringr, 
     tidyr,
-    tidytext
+    tidytext,
+    tidyorgs,
+    stats, 
+    magrittr,
+    rlang
 RoxygenNote: 7.1.1

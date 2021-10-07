@@ -20,9 +20,9 @@
 #'   
 #' @export
 detect_equity_terms <- function(data, id, input){
-  id <- enquo(id)
-  input <- enquo(input)
+  id <- dplyr::enquo(id)
+  input <- dplyr::enquo(input)
   data <- data %>% 
-    funnel_match(!!id, !!input, equity, "equity")
+    diverstidy::funnel_match(!!id, !!input, equity, "equity")
   data 
 }

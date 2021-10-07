@@ -1,3 +1,11 @@
+#' Funnel matching engine for term matching in sequences
+#' 
+#' @param id A numeric or character vector unique to each entry.
+#' @param input Character vector of text data.
+#' @param category Category for term detection.
+#' @param category_string Entry to filter by.
+#' 
+#' @export
 funnel_match <- function(data, id, input, category, category_string){
 
   id <- enquo(id)
@@ -8,8 +16,8 @@ funnel_match <- function(data, id, input, category, category_string){
   dictionary <- diversity_dictionary %>% 
     #readr::read_rds(file = "R/diversity_dictionary.rds") %>% 
     tidyr::unnest_legacy(category = base::strsplit(category, "\\|")) %>%
-    mutate(category = stringr::str_replace(category, "/", "_")) %>% 
-    filter(category == category_string)
+    dplyr::mutate(category = stringr::str_replace(category, "/", "_")) %>% 
+    dplyr::filter(category == category_string)
   
   max_n <- dictionary %>%
     tidyr::unnest_legacy(catch_terms = base::strsplit(catch_terms, "\\|")) %>%
@@ -25,7 +33,7 @@ funnel_match <- function(data, id, input, category, category_string){
       tidyr::unnest_legacy(catch_terms = base::strsplit(catch_terms, "\\|")) %>%
       dplyr::mutate(word_count = lengths(base::strsplit(catch_terms, "\\W+"))) %>%
       dplyr::filter(word_count == n_word)
-    subdictionary <- na.omit(subdictionary$catch_terms)
+    subdictionary <- stats::na.omit(subdictionary$catch_terms)
     funnelized <- data %>%
       tidytext::unnest_tokens(words, !!input, token="ngrams", n=n_word, to_lower = TRUE) %>%
       dplyr::filter(words %in% subdictionary) %>%
@@ -50,16 +58,7 @@ funnel_match <- function(data, id, input, category, category_string){
     dplyr::summarise("{{category}}" := sum(!!category))
   suppressMessages(
   funnelized <- data %>% 
-    left_join(funnelized) %>% 
+    dplyr::left_join(funnelized) %>% 
     dplyr::mutate("{{category}}" := replace_na(!!category, 0)))
   funnelized
 }
-
-
-
-
-
-
-
-
-

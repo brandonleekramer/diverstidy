@@ -20,9 +20,9 @@
 #'   
 #' @export
 detect_cultural_terms <- function(data, id, input){
-  id <- enquo(id)
-  input <- enquo(input)
+  id <- dplyr::enquo(id)
+  input <- dplyr::enquo(input)
   data <- data %>% 
-    funnel_match(!!id, !!input, cultural, "cultural")
+    diverstidy::funnel_match(!!id, !!input, cultural, "cultural")
   data 
 }

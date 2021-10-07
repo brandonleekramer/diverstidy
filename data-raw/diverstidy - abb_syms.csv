@@ -1,44 +1,57 @@
 original_string,recode_column,category
+corua,coruna,cities
+crdoba,cordoba,cities
 l\\.a\\.,los angeles,cities
 nyc,new york city,cities
 sf,san francisco,cities
-crdoba,cordoba,cities
-corua,coruna,cities
+ (?<!r)us$,united states,countries
+ usa$,united states,countries
 ", bc(?![a-z])",", british columbia",countries
 ", br(?![a-z])",", brazil",countries
-", ch(?![a-z])", china,countries
 ", chn(?![a-z])", china,countries
-(?<![a-z])cz(?![a-z]),czech republic,countries
-(?<![a-z]) cz(?![a-z]),czech republic,countries
 ", uk(?![a-z])",", united kingdom",countries
 ",china", china,countries
+(?<![a-z]) cz(?![a-z]),czech republic,countries
+(?<![a-z])cz(?![a-z]),czech republic,countries
 china's,china,countries
 jp,japan,countries
 p\\.r\\.china,china,countries
 u\\.s\\.,united states,countries
 u\\.s\\.a,united states,countries
 u\\.s\\.a\\.,united states,countries
- (?<!r)us$,united states,countries
- usa$,united states,countries
+xi'an|西安|陕西西安,xi'an china,symbols
 санкт петербург,saint petersburg russia,symbols
+경상북도 포항시,pohang gyeongsangbuk-do south korea,symbols
 上海,shanghai,symbols
 中国,china,symbols
 北京,beijing,symbols
 北京市,beijing,symbols
 区,district,symbols
 南京,nanjing,symbols
+厦门,xiamen china,symbols
 四川,sichuan,symbols
+团结湖,tuanjiehu china,symbols
+安徽,anhui china,symbols
+山东,shandong china,symbols
+山西晋城,jincheng shanxi china,symbols
 市,city,symbols
 广东,guangdong,symbols
 广州,guangzhou,symbols
 广州 市,guangzhou city china,symbols
+徐州,xuzhou china,symbols
 成都,chengdu,symbols
 新 区,new district china,symbols
 朝阳,chaoyang,symbols
 杭州,hangzhou,symbols
+東京,tokyo japan,symbols
+桂林,guilin china,symbols
 武汉,wuhan,symbols
+汕头,shantou china,symbols
 江苏,jiangsu,symbols
+江西省南昌市高,nanchang city jiangxi province china,symbols
+沈阳,shenyang china,symbols
 沙坪坝区 ,shapingba district china,symbols
+河南|^河南,henan china,symbols
 浙江,zhejiang,symbols
 浙江 杭州,hangzhou zhejiang,symbols
 海,sea,symbols
@@ -49,12 +62,12 @@ u\\.s\\.a\\.,united states,countries
 湖北,hubei,symbols
 湖南,hunan,symbols
 省,province,symbols
+重庆|^重庆,chongqing china,symbols
 长沙,changsha,symbols
 ", ak(?![a-z])",", alaska",us_states
 ", al(?![a-z])",", alabama",us_states
 ", ar(?![a-z])",", arkansas",us_states
 ", az(?![a-z])",", arizona",us_states
-"(?<!victoria|bec|treal), ca(?![a-z])",", california",us_states
 ", co(?![a-z])",", colorado",us_states
 ", ct(?![a-z])",", connecticut",us_states
 ", dc(?![a-z])",", washington dc",us_states
@@ -68,7 +81,7 @@ u\\.s\\.a\\.,united states,countries
 ", in(?![a-z])",", indiana",us_states
 ", ks(?![a-z])",", kansas",us_states
 ", ky(?![a-z])",", kentucky",us_states
-", la(?![a-z])",", louisiana",us_states
+", la(?![a-z]| paz)",", louisiana",us_states
 ", ma(?![a-z])",", massachusetts",us_states
 ", md(?![a-z])",", maryland",us_states
 ", me(?![a-z])",", maine",us_states
@@ -102,18 +115,4 @@ u\\.s\\.a\\.,united states,countries
 ", wi(?![a-z])",", wisconsin",us_states
 ", wv(?![a-z])",", west virginia",us_states
 ", wy(?![a-z])",", wyoming",us_states
-xi'an|西安|陕西西安,xi'an china,symbols
-경상북도 포항시,pohang gyeongsangbuk-do south korea,symbols
-山东,shandong china,symbols
-安徽,anhui china,symbols
-厦门,xiamen china,symbols
-团结湖,tuanjiehu china,symbols
-山西晋城,jincheng shanxi china,symbols
-徐州,xuzhou china,symbols
-東京,tokyo japan,symbols
-桂林,guilin china,symbols
-汕头,shantou china,symbols
-江西省南昌市高,nanchang city jiangxi province china,symbols
-沈阳,shenyang china,symbols
-河南|^河南,henan china,symbols
-重庆|^重庆,chongqing china,symbols
+"(?<!victoria|bec|treal), ca(?![a-z])",", california",us_states
