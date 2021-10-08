@@ -142,14 +142,6 @@ detect_geographies <- function(data, id, input,
     dplyr::mutate(geo_code = stringr::str_replace_all(words, dictionary)) %>% 
     dplyr::select(!!id, geo_code) 
   pb$tick(60)
-  all_matched_data <- all_matched_data %>% 
-    dplyr::distinct(across(everything())) %>%
-    dplyr::group_by(!!id, geo_code) %>%
-    dplyr::mutate(geo_code = paste(geo_code, collapse = "|")) %>% 
-    dplyr::distinct(across(everything())) %>%
-    dplyr::mutate(geo_code = dplyr::na_if(geo_code, "NA")) %>% 
-    dplyr::rename("{{output}}" := geo_code) %>% 
-    dplyr::rename_all(~stringr::str_replace_all(.,"\"",""))
   # going to use this vector to filter later on 
   geography_list <- c(stats::na.omit(countries_data$country), 
                       stats::na.omit(countries_data$iso_2),
@@ -164,6 +156,16 @@ detect_geographies <- function(data, id, input,
                       stats::na.omit(countries_data$country_french), 
                       stats::na.omit(countries_data$country_russian),
                       stats::na.omit(countries_data$country_spanish))
+  # aggregate all matched data 
+  all_matched_data <- all_matched_data %>% 
+    dplyr::distinct(across(everything())) %>% 
+    dplyr::filter((is.na(geo_code) | geo_code %in% geography_list) & geo_code != "NA") %>% # added here 
+    dplyr::group_by(!!id, geo_code) %>%
+    dplyr::mutate(geo_code = paste(geo_code, collapse = "|")) %>% 
+    dplyr::distinct(across(everything())) %>%
+    dplyr::mutate(geo_code = dplyr::na_if(geo_code, "NA")) %>% 
+    dplyr::rename("{{output}}" := geo_code) %>% 
+    dplyr::rename_all(~stringr::str_replace_all(.,"\"",""))
   pb$tick(10)
   # put it all together 
   if (missing(email)) { 
@@ -174,15 +176,14 @@ detect_geographies <- function(data, id, input,
         dplyr::rename(geo_code = !!output) %>% 
         dplyr::distinct(across(everything())) %>%
         # removing %notin% reveals regex still to fix
-        dplyr::filter((is.na(geo_code) | geo_code %in% geography_list) & geo_code != "NA") %>% 
+        #dplyr::filter((is.na(geo_code) | geo_code %in% geography_list) & geo_code != "NA") %>% 
         dplyr::group_by(!!id, !!input) %>%
         dplyr::mutate(geo_code =  paste0(geo_code, collapse = "|")) %>% 
         dplyr::distinct(across(everything())) %>%
         dplyr::mutate("{{output}}" := dplyr::na_if(geo_code, "NA")) %>% 
         dplyr::rename_all(~stringr::str_replace_all(.,"\"","")) %>% 
         dplyr::ungroup() %>% 
-        dplyr::select(-geo_code) 
-    )
+        dplyr::select(-geo_code))
     } else {
     # 6. otherwise, match by emails 
     email <- enquo(email)
@@ -231,7 +232,7 @@ detect_geographies <- function(data, id, input,
         dplyr::rename(geo_code = !!output) %>% 
         dplyr::distinct(across(everything())) %>%
         # removing %notin% reveals regex still to fix
-        dplyr::filter((is.na(geo_code) | geo_code %in% geography_list) & geo_code != "NA") %>% 
+        #dplyr::filter((is.na(geo_code) | geo_code %in% geography_list) & geo_code != "NA") %>% 
         dplyr::group_by(!!id, !!input, !!email) %>%
         dplyr::mutate(geo_code =  paste0(geo_code, collapse = "|")) %>% 
         dplyr::distinct(across(everything())) %>%

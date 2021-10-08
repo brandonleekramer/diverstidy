@@ -14,7 +14,7 @@ conn <- dbConnect(drv = PostgreSQL(),
                   user = Sys.getenv("db_userid"),
                   password = Sys.getenv("db_pwd"))
 #test <- dbGetQuery(conn, "SELECT * FROM gh.ctrs_raw")
-github_users <- dbGetQuery(conn, "SELECT login, company, location, email FROM gh.ctrs_clean_0821")
+github_users <- dbGetQuery(conn, "SELECT login, company, location, email FROM gh.ctrs_clean_0821 limit 100")
 dbDisconnect(conn)
 
 setwd("~/git/diverstidy/data-raw/")
@@ -22,8 +22,8 @@ saveRDS(text_to_countries_df, file = "classified.rds", compress = TRUE)
 
 github_users <- tidyorgs::github_users
 devtools::load_all()
-github_users %>%
-  detect_geographies(login, location, "country")
+chk <- github_users %>%
+  detect_geographies(login, location, "country", email)
 
 
 chk <- github_users %>%
