@@ -172,7 +172,7 @@ detect_geographies <- function(data, id, input,
     # if no emails then do this 
     suppressMessages(
       data <- original_data %>% 
-        dplyr::left_join(all_matched_data) %>%
+        dplyr::left_join(all_matched_data) %>% 
         dplyr::rename(geo_code = !!output) %>% 
         dplyr::distinct(across(everything())) %>%
         # removing %notin% reveals regex still to fix
